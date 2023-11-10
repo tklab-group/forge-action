@@ -1,17 +1,22 @@
 import * as core from '@actions/core'
-import * as github from '@actions/github'
+import * as exec from '@actions/exec'
 
-export function run(): void {
+export async function run(): Promise<void> {
   try {
-    // `who-to-greet` input defined in action metadata file
-    const nameToGreet = core.getInput('who-to-greet')
-    console.log(`Hello ${nameToGreet}!`)
-    const time = new Date().toTimeString()
-    core.setOutput('time', time)
-    // Get the JSON webhook payload for the event that triggered the workflow
-    const payload = JSON.stringify(github.context.payload, undefined, 2)
-    console.log(`The event payload: ${payload}`)
+    await installForge(core.getInput('version'))
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }
+}
+
+async function installForge(version: string) {
+  try {
+    let output = await exec.getExecOutput('which go')
+    core.debug('stdout of `which go`:' + output.stdout)
+  } catch (error) {
+    if (error instanceof Error) console.log(error.message)
+    throw new Error('Setup Go environment before using this action')
+  }
+
+  // TODO: install forge
 }

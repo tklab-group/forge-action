@@ -1,19 +1,20 @@
 on: [push]
 
 jobs:
-  hello_world_job:
+  debug:
     runs-on: ubuntu-latest
-    name: A job to say hello
+    name: Debug for forge-action
     steps:
       # To use this repository's private action,
       # you must check out the repository
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Hello world action step
-        uses: ./ # Uses an action in the root directory
-        id: hello
+      - name: Setup Go
+        uses: actions/setup-go@v4
         with:
-          who-to-greet: 'Mona the Octocat'
-      # Use the output from the `hello` step
-      - name: Get the output time
-        run: echo "The time was ${{ steps.hello.outputs.time }}"
+          go-version: '^1.21.3'
+      - name: forge action step
+        uses: ./ # Uses an action in the root directory
+        id: forge
+        with:
+          version: latest
