@@ -1,13 +1,15 @@
- name: 'forge-action'
- description: 'Update Moldfile with forge'
- inputs:
-   version:
-     description: 'The version of forge to use'
-     default: 'latest'
-   build-context:
-     description: 'The path to build the base Dockerfile'
-   dockerfile:
-     description: 'The base Dockerfile to generate Moldfile'
- runs:
-   using: 'node20'
-   main: 'dist/index.js'
+name: 'forge-action'
+description: 'Update Moldfile with forge'
+inputs:
+  version:
+    description: 'The version of forge to use'
+    default: 'latest'
+  build-context:
+    description: 'The path to build the base Dockerfile'
+  dockerfile:
+    description: 'The base Dockerfile to generate Moldfile'
+  github-token:
+    description: 'for debug'
+runs:
+  using: 'node20'
+  main: 'dist/index.js'

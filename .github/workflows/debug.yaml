@@ -18,3 +18,4 @@ jobs:
         id: forge
         with:
           version: latest
+          github-token: ${{ secrets.GITHUB_TOKEN }}
