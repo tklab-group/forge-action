@@ -1,13 +1,13 @@
-name: 'Hello World'
-description: 'Greet someone and record the time'
-inputs:
-  who-to-greet:  # id of input
-    description: 'Who to greet'
-    required: true
-    default: 'World'
-outputs:
-  time: # id of output
-    description: 'The time we greeted you'
-runs:
-  using: 'node20'
-  main: 'dist/index.js'
+ name: 'forge-action'
+ description: 'Update Moldfile with forge'
+ inputs:
+   version:
+     description: 'The version of forge to use'
+     default: 'latest'
+   build-context:
+     description: 'The path to build the base Dockerfile'
+   dockerfile:
+     description: 'The base Dockerfile to generate Moldfile'
+ runs:
+   using: 'node20'
+   main: 'dist/index.js'
