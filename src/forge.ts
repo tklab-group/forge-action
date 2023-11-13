@@ -1,6 +1,9 @@
 import * as exec from '@actions/exec'
 import * as core from '@actions/core'
 import * as fs from 'fs'
+import { Vdiff } from './vdiff'
+import { createTempDirectory } from './util'
+import * as path from 'path'
 
 export async function installForge(version: string, githubToken: string) {
   try {
@@ -44,4 +47,27 @@ export async function generateMoldfile(
   const generatedContent = fs.readFileSync(moldfile)
 
   core.debug(`generated Moldfile content:\n${generatedContent.toString()}`)
+}
+
+export async function getVdiff(
+  moldfile1: string,
+  moldfile2: string
+): Promise<Vdiff> {
+  const tempDir = await createTempDirectory()
+  const outputFile = path.join(tempDir, 'vdiff.json')
+
+  await exec.exec('forge', [
+    'vdiff',
+    '--output',
+    outputFile,
+    moldfile1,
+    moldfile2
+  ])
+
+  const content = fs.readFileSync(outputFile)
+  const vdiff: Vdiff = JSON.parse(content.toString())
+
+  core.debug(JSON.stringify(vdiff))
+
+  return vdiff
 }

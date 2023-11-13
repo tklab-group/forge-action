@@ -1,5 +1,5 @@
 import * as core from '@actions/core'
-import { generateMoldfile, installForge } from './forge'
+import { generateMoldfile, getVdiff, installForge } from './forge'
 import { createTempDirectory, isFileExist, isFileUpToDate } from './util'
 import * as path from 'path'
 import * as fs from 'fs'
@@ -50,6 +50,13 @@ export async function run(inputs: Inputs): Promise<void> {
     }
 
     console.log('Is Moldfile up-to-date:', isMoldfileUpToDate)
+
+    let vdiffBaseFilePath = moldfilePath
+    if (!moldfileExist) {
+      vdiffBaseFilePath = path.join(inputs.workingDirectory, inputs.dockerfile)
+    }
+
+    core.group('Get vdiff', () => getVdiff(vdiffBaseFilePath, tmpMoldfile))
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }

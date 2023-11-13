@@ -26930,10 +26930,12 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.generateMoldfile = exports.installForge = void 0;
+exports.getVdiff = exports.generateMoldfile = exports.installForge = void 0;
 const exec = __importStar(__nccwpck_require__(1514));
 const core = __importStar(__nccwpck_require__(2186));
 const fs = __importStar(__nccwpck_require__(7147));
+const util_1 = __nccwpck_require__(2629);
+const path = __importStar(__nccwpck_require__(1017));
 async function installForge(version, githubToken) {
     try {
         let output = await exec.getExecOutput('which go');
@@ -26963,6 +26965,22 @@ async function generateMoldfile(workingDir, buildContext, dockerfile, moldfile) 
     core.debug(`generated Moldfile content:\n${generatedContent.toString()}`);
 }
 exports.generateMoldfile = generateMoldfile;
+async function getVdiff(moldfile1, moldfile2) {
+    const tempDir = await (0, util_1.createTempDirectory)();
+    const outputFile = path.join(tempDir, 'vdiff.json');
+    await exec.exec('forge', [
+        'vdiff',
+        '--output',
+        outputFile,
+        moldfile1,
+        moldfile2
+    ]);
+    const content = fs.readFileSync(outputFile);
+    const vdiff = JSON.parse(content.toString());
+    core.debug(JSON.stringify(vdiff));
+    return vdiff;
+}
+exports.getVdiff = getVdiff;
 
 
 /***/ }),
@@ -27064,6 +27082,11 @@ async function run(inputs) {
             return;
         }
         console.log('Is Moldfile up-to-date:', isMoldfileUpToDate);
+        let vdiffBaseFilePath = moldfilePath;
+        if (!moldfileExist) {
+            vdiffBaseFilePath = path.join(inputs.workingDirectory, inputs.dockerfile);
+        }
+        core.group('Get vdiff', () => (0, forge_1.getVdiff)(vdiffBaseFilePath, tmpMoldfile));
     }
     catch (error) {
         if (error instanceof Error)
