@@ -3,7 +3,9 @@ import * as exec from '@actions/exec'
 
 export async function run(): Promise<void> {
   try {
-    await installForge(core.getInput('version'))
+    await core.group('Install forge', () =>
+      installForge(core.getInput('version'))
+    )
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }

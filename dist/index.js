@@ -26935,7 +26935,7 @@ const core = __importStar(__nccwpck_require__(2186));
 const exec = __importStar(__nccwpck_require__(1514));
 async function run() {
     try {
-        await installForge(core.getInput('version'));
+        await core.group('Install forge', () => installForge(core.getInput('version')));
     }
     catch (error) {
         if (error instanceof Error)
