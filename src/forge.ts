@@ -1,5 +1,6 @@
 import * as exec from '@actions/exec'
 import * as core from '@actions/core'
+import * as fs from 'fs'
 
 export async function installForge(version: string, githubToken: string) {
   try {
@@ -23,4 +24,24 @@ async function installPrivateForge(version: string, githubToken: string) {
   await exec.exec('go', ['env', '-w', 'GOPRIVATE=github.com/tklab-group'])
 
   await exec.exec('go', ['install', `github.com/tklab-group/forge@${version}`])
+}
+
+export async function generateMoldfile(
+  workingDir: string,
+  buildContext: string,
+  dockerfile: string,
+  moldfile: string
+) {
+  await exec.exec(
+    'forge',
+    ['mold', buildContext, '--dockerfile', dockerfile, '--moldfile', moldfile],
+    {
+      cwd: workingDir
+    }
+  )
+
+  // debug
+  const generatedContent = fs.readFileSync(moldfile)
+
+  core.debug(`generated Moldfile content:\n${generatedContent.toString()}`)
 }
