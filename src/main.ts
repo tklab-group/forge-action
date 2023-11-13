@@ -1,7 +1,8 @@
 import * as core from '@actions/core'
 import { generateMoldfile, installForge } from './forge'
-import { createTempDirectory } from './util'
+import { createTempDirectory, isFileExist, isFileUpToDate } from './util'
 import * as path from 'path'
+import * as fs from 'fs'
 
 export interface Inputs {
   version: string
@@ -29,6 +30,26 @@ export async function run(inputs: Inputs): Promise<void> {
         tmpMoldfile
       )
     )
+
+    let isMoldfileUpToDate = false
+
+    const moldfilePath = path.join(inputs.workingDirectory, inputs.moldfile)
+    const moldfileExist = await isFileExist(moldfilePath)
+
+    if (moldfileExist) {
+      const generatedMoldfileContent = fs.readFileSync(tmpMoldfile)
+      isMoldfileUpToDate = isFileUpToDate(
+        moldfilePath,
+        generatedMoldfileContent
+      )
+    }
+
+    if (isMoldfileUpToDate) {
+      core.info('Moldfile is up-to-date')
+      return
+    }
+
+    console.log('Is Moldfile up-to-date:', isMoldfileUpToDate)
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }

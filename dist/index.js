@@ -27045,12 +27045,25 @@ const core = __importStar(__nccwpck_require__(2186));
 const forge_1 = __nccwpck_require__(9833);
 const util_1 = __nccwpck_require__(2629);
 const path = __importStar(__nccwpck_require__(1017));
+const fs = __importStar(__nccwpck_require__(7147));
 async function run(inputs) {
     try {
         await core.group('Install forge', () => (0, forge_1.installForge)(inputs.version, inputs.githubToken));
         const tmpDir = await (0, util_1.createTempDirectory)();
         const tmpMoldfile = path.join(tmpDir, 'Dockerfile.mold');
         await core.group('Generate Moldfile', () => (0, forge_1.generateMoldfile)(inputs.workingDirectory, inputs.buildContext, inputs.dockerfile, tmpMoldfile));
+        let isMoldfileUpToDate = false;
+        const moldfilePath = path.join(inputs.workingDirectory, inputs.moldfile);
+        const moldfileExist = await (0, util_1.isFileExist)(moldfilePath);
+        if (moldfileExist) {
+            const generatedMoldfileContent = fs.readFileSync(tmpMoldfile);
+            isMoldfileUpToDate = (0, util_1.isFileUpToDate)(moldfilePath, generatedMoldfileContent);
+        }
+        if (isMoldfileUpToDate) {
+            core.info('Moldfile is up-to-date');
+            return;
+        }
+        console.log('Is Moldfile up-to-date:', isMoldfileUpToDate);
     }
     catch (error) {
         if (error instanceof Error)
@@ -27091,9 +27104,12 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.createTempDirectory = void 0;
+exports.isFileUpToDate = exports.isFileExist = exports.createTempDirectory = void 0;
 const path = __importStar(__nccwpck_require__(1017));
 const io = __importStar(__nccwpck_require__(7436));
+const fs = __importStar(__nccwpck_require__(7147));
+const ioutil = __importStar(__nccwpck_require__(1962));
+const crypto = __importStar(__nccwpck_require__(6113));
 async function createTempDirectory() {
     let tempDirectory = process.env['RUNNER_TEMP'] || '';
     if (tempDirectory === '') {
@@ -27104,6 +27120,27 @@ async function createTempDirectory() {
     return dst;
 }
 exports.createTempDirectory = createTempDirectory;
+async function isFileExist(path) {
+    const exist = await ioutil.exists(path);
+    if (!exist) {
+        return false;
+    }
+    const isDirectory = await ioutil.isDirectory(path);
+    if (isDirectory) {
+        throw Error(`${path} is a directory. Expected a file or none`);
+    }
+    return true;
+}
+exports.isFileExist = isFileExist;
+function isFileUpToDate(path, expectedContent) {
+    const currentContent = fs.readFileSync(path);
+    const currentHash = crypto.createHash('sha256');
+    currentHash.update(currentContent);
+    const expectedHash = crypto.createHash('sha256');
+    expectedHash.update(expectedContent);
+    return currentHash.digest().toString() === expectedHash.digest().toString();
+}
+exports.isFileUpToDate = isFileUpToDate;
 
 
 /***/ }),
