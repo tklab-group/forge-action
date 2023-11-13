@@ -4,10 +4,18 @@ inputs:
   version:
     description: 'The version of forge to use'
     default: 'latest'
+  working-directory:
+    description: 'Working directory'
+    default: '.'
   build-context:
     description: 'The path to build the base Dockerfile'
+    required: true
   dockerfile:
     description: 'The base Dockerfile to generate Moldfile'
+    required: true
+  moldfile:
+    description: 'The target Moldfile to update'
+    required: true
   github-token:
     description: 'for debug'
 runs:

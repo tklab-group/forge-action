@@ -26955,22 +26955,13 @@ async function installForge(version) {
     }
     // TODO: Remove and improve after the repository becoming public
     await installPrivateForge(version);
+    await exec.exec('forge', ['--version']);
 }
 async function installPrivateForge(version) {
     let githubToken = core.getInput('github-token');
     await exec.exec(`git config --global url."https://${githubToken}:x-oauth-basic@github.com/".insteadOf "https://github.com/"`);
-    // console.log('set GOMODCACHE')
-    // await exec.exec('echo', ['$GOPATH/pkg/mod', '>', '$GOMODCACHE'])
     await exec.exec('go', ['env', '-w', 'GOPRIVATE=github.com/tklab-group']);
-    await exec.exec('go', ['env']);
-    let option = {
-        env: {
-            GOPRIVATE: 'github.com/tklab-group'
-        }
-    };
-    await exec.exec('go', ['install', `github.com/tklab-group/forge@${version}`]
-    // option
-    );
+    await exec.exec('go', ['install', `github.com/tklab-group/forge@${version}`]);
 }
 
 

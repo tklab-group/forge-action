@@ -20,6 +20,8 @@ async function installForge(version: string) {
 
   // TODO: Remove and improve after the repository becoming public
   await installPrivateForge(version)
+
+  await exec.exec('forge', ['--version'])
 }
 
 async function installPrivateForge(version: string) {
