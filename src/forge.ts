@@ -4,6 +4,9 @@ import * as fs from 'fs'
 import { Vdiff } from './vdiff'
 import { createTempDirectory } from './util'
 import * as path from 'path'
+import * as semver from 'semver'
+
+const requiredForgeVersion = '>=v0.0.4'
 
 export async function installForge(version: string, githubToken: string) {
   try {
@@ -17,7 +20,7 @@ export async function installForge(version: string, githubToken: string) {
   // TODO: Remove and improve after the repository becoming public
   await installPrivateForge(version, githubToken)
 
-  await exec.exec('forge', ['--version'])
+  await validateInstalledVersion()
 }
 
 async function installPrivateForge(version: string, githubToken: string) {
@@ -27,6 +30,23 @@ async function installPrivateForge(version: string, githubToken: string) {
   await exec.exec('go', ['env', '-w', 'GOPRIVATE=github.com/tklab-group'])
 
   await exec.exec('go', ['install', `github.com/tklab-group/forge@${version}`])
+}
+
+async function validateInstalledVersion() {
+  const versionOutput = await exec.getExecOutput('forge', ['--version'])
+  const match = versionOutput.stdout.match(/forge version (.+)/)
+  if (!match || match.length !== 2) {
+    throw Error('`forge --version` output is unexpected format')
+  }
+
+  const installedVersion = match[1]
+  console.log('installed forge version', installedVersion)
+
+  if (!semver.satisfies(installedVersion, requiredForgeVersion)) {
+    throw Error(
+      `This action required forge ${requiredForgeVersion} but installed ${installedVersion}`
+    )
+  }
 }
 
 export async function generateMoldfile(
