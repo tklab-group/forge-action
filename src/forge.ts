@@ -1,5 +1,6 @@
 import * as exec from '@actions/exec'
 import * as core from '@actions/core'
+import * as io from '@actions/io'
 import * as fs from 'fs'
 import { Vdiff } from './vdiff'
 import { createTempDirectory } from './util'
@@ -10,8 +11,8 @@ const requiredForgeVersion = '>=v0.0.4'
 
 export async function installForge(version: string, githubToken: string) {
   try {
-    let output = await exec.getExecOutput('which go')
-    core.debug('stdout of `which go`:' + output.stdout)
+    const goExecPath = await io.which('go', true)
+    core.debug('stdout of `which go`:' + goExecPath)
   } catch (error) {
     if (error instanceof Error) console.log(error.message)
     throw new Error('Setup Go environment before using this action')

@@ -30199,6 +30199,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getVdiff = exports.generateMoldfile = exports.installForge = void 0;
 const exec = __importStar(__nccwpck_require__(1514));
 const core = __importStar(__nccwpck_require__(2186));
+const io = __importStar(__nccwpck_require__(7436));
 const fs = __importStar(__nccwpck_require__(7147));
 const util_1 = __nccwpck_require__(2629);
 const path = __importStar(__nccwpck_require__(1017));
@@ -30206,8 +30207,8 @@ const semver = __importStar(__nccwpck_require__(1383));
 const requiredForgeVersion = '>=v0.0.4';
 async function installForge(version, githubToken) {
     try {
-        let output = await exec.getExecOutput('which go');
-        core.debug('stdout of `which go`:' + output.stdout);
+        const goExecPath = await io.which('go', true);
+        core.debug('stdout of `which go`:' + goExecPath);
     }
     catch (error) {
         if (error instanceof Error)
