@@ -30167,6 +30167,43 @@ try {
 
 /***/ }),
 
+/***/ 7014:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getRunningActionInfo = void 0;
+function getRunningActionInfo() {
+    // https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables
+    const repository = process.env.GITHUB_REPOSITORY;
+    if (!repository) {
+        throw Error('GITHUB_REPOSITOY is unset');
+    }
+    const eventName = process.env.GTIHUB_EVENT_NAME;
+    const triggerdBranch = process.env.GITHUB_REF_NAME;
+    if (!triggerdBranch) {
+        throw Error('GITHUB_REF_NAME is unset');
+    }
+    let pullRequestId;
+    const githubRef = process.env.GTIHUB_REF;
+    if (githubRef) {
+        if (githubRef.startsWith('refs/pull/')) {
+            pullRequestId = githubRef.match(/refs\/pull\/(.+)\/merge/)?.at(1);
+        }
+    }
+    return {
+        repository: repository,
+        eventName: eventName,
+        triggerdBranch: triggerdBranch,
+        pullRequestId: pullRequestId
+    };
+}
+exports.getRunningActionInfo = getRunningActionInfo;
+
+
+/***/ }),
+
 /***/ 9833:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -30455,8 +30492,11 @@ const util_1 = __nccwpck_require__(2629);
 const path = __importStar(__nccwpck_require__(1017));
 const fs = __importStar(__nccwpck_require__(7147));
 const git_1 = __nccwpck_require__(6350);
+const actions_1 = __nccwpck_require__(7014);
 async function run(inputs) {
     try {
+        const actionInfo = (0, actions_1.getRunningActionInfo)();
+        console.log('Running action information', actionInfo);
         await core.group('Install forge', () => (0, forge_1.installForge)(inputs.version, inputs.githubToken));
         const tmpDir = await (0, util_1.createTempDirectory)();
         const tmpMoldfile = path.join(tmpDir, 'Dockerfile.mold');

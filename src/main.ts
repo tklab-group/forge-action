@@ -5,6 +5,7 @@ import { createTempDirectory, isFileExist, isFileUpToDate } from './util'
 import * as path from 'path'
 import * as fs from 'fs'
 import { getNewBranchName, newGitManager } from './git'
+import { getRunningActionInfo } from './actions'
 
 export interface Inputs {
   version: string
@@ -18,6 +19,9 @@ export interface Inputs {
 
 export async function run(inputs: Inputs): Promise<void> {
   try {
+    const actionInfo = getRunningActionInfo()
+    console.log('Running action information', actionInfo)
+
     await core.group('Install forge', () =>
       installForge(inputs.version, inputs.githubToken)
     )
