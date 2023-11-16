@@ -30299,7 +30299,8 @@ exports.getNewBranchName = exports.newGitManager = void 0;
 const exec = __importStar(__nccwpck_require__(1514));
 const util_1 = __nccwpck_require__(2629);
 function newGitManager() {
-    if (process.env.LOCAL_DEBUG === 'true') {
+    if ((0, util_1.isLocalDebug)()) {
+        console.log('Use GitMockManager');
         return new GitMockManager();
     }
     else {
@@ -30333,7 +30334,7 @@ class GitMockManager {
         await gitCommitChange(message);
     }
     async pushBranch(branchName) {
-        console.log('Skip pushing branch');
+        console.log('Skip pushing branch', branchName);
     }
 }
 async function gitUserSetup() {
@@ -30529,7 +30530,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.currentUnixTimestamp = exports.isFileUpToDate = exports.isFileExist = exports.createTempDirectory = void 0;
+exports.isLocalDebug = exports.currentUnixTimestamp = exports.isFileUpToDate = exports.isFileExist = exports.createTempDirectory = void 0;
 const path = __importStar(__nccwpck_require__(1017));
 const io = __importStar(__nccwpck_require__(7436));
 const fs = __importStar(__nccwpck_require__(7147));
@@ -30570,6 +30571,10 @@ function currentUnixTimestamp() {
     return Math.floor(Date.now() / 1000);
 }
 exports.currentUnixTimestamp = currentUnixTimestamp;
+function isLocalDebug() {
+    return process.env.LOCAL_DEBUG === 'true';
+}
+exports.isLocalDebug = isLocalDebug;
 
 
 /***/ }),

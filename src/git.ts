@@ -1,5 +1,5 @@
 import * as exec from '@actions/exec'
-import { currentUnixTimestamp } from './util'
+import { currentUnixTimestamp, isLocalDebug } from './util'
 
 export interface GitManagerInterface {
   setup(): Promise<void>
@@ -9,7 +9,8 @@ export interface GitManagerInterface {
 }
 
 export function newGitManager(): GitManagerInterface {
-  if (process.env.LOCAL_DEBUG === 'true') {
+  if (isLocalDebug()) {
+    console.log('Use GitMockManager')
     return new GitMockManager()
   } else {
     return new GitManager()
@@ -49,7 +50,7 @@ class GitMockManager implements GitManagerInterface {
   }
 
   async pushBranch(branchName: string): Promise<void> {
-    console.log('Skip pushing branch')
+    console.log('Skip pushing branch', branchName)
   }
 }
 

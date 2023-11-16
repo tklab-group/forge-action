@@ -45,3 +45,7 @@ export function isFileUpToDate(path: string, expectedContent: Buffer): boolean {
 export function currentUnixTimestamp() {
   return Math.floor(Date.now() / 1000)
 }
+
+export function isLocalDebug(): boolean {
+  return process.env.LOCAL_DEBUG === 'true'
+}
