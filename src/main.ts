@@ -4,12 +4,7 @@ import { generateMoldfile, getVdiff, installForge } from './forge'
 import { createTempDirectory, isFileExist, isFileUpToDate } from './util'
 import * as path from 'path'
 import * as fs from 'fs'
-import {
-  commitChange,
-  getNewBranchName,
-  gitUserSetup,
-  switchBranch
-} from './git'
+import { getNewBranchName, newGitManager } from './git'
 
 export interface Inputs {
   version: string
@@ -67,11 +62,16 @@ export async function run(inputs: Inputs): Promise<void> {
     core.group('Get vdiff', () => getVdiff(vdiffBaseFilePath, tmpMoldfile))
 
     await replaceWithUpdatedMoldfile(moldfilePath, tmpMoldfile)
-    core.group('Setup git', () => gitUserSetup())
 
     const branchName = getNewBranchName()
-    await switchBranch(branchName, true)
-    await commitChange(`Update ${inputs.moldfile} with forege-action`)
+
+    core.startGroup('Git operation')
+    const gitManager = newGitManager()
+    await gitManager.setup()
+    await gitManager.switchBranch(branchName, true)
+    await gitManager.commitChange(`Update ${inputs.moldfile} with forge-action`)
+    await gitManager.pushBranch(branchName)
+    core.endGroup()
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }

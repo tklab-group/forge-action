@@ -1,7 +1,59 @@
 import * as exec from '@actions/exec'
 import { currentUnixTimestamp } from './util'
 
-export async function gitUserSetup() {
+export interface GitManagerInterface {
+  setup(): Promise<void>
+  switchBranch(branchName: string, needCreate: boolean): Promise<void>
+  commitChange(message: string): Promise<void>
+  pushBranch(branchName: string): Promise<void>
+}
+
+export function newGitManager(): GitManagerInterface {
+  if (process.env.LOCAL_DEBUG === 'true') {
+    return new GitMockManager()
+  } else {
+    return new GitManager()
+  }
+}
+
+class GitManager implements GitManagerInterface {
+  async setup(): Promise<void> {
+    await gitUserSetup()
+  }
+
+  async switchBranch(branchName: string, needCreate: boolean): Promise<void> {
+    await gitSwitchBranch(branchName, needCreate)
+  }
+
+  async commitChange(message: string): Promise<void> {
+    await gitCommitChange(message)
+  }
+
+  async pushBranch(branchName: string): Promise<void> {
+    await gitPushBranch(branchName)
+  }
+}
+
+// GitMockManager mocks methods to effect existing repositories.
+class GitMockManager implements GitManagerInterface {
+  async setup(): Promise<void> {
+    await gitUserSetup()
+  }
+
+  async switchBranch(branchName: string, needCreate: boolean): Promise<void> {
+    await gitSwitchBranch(branchName, needCreate)
+  }
+
+  async commitChange(message: string): Promise<void> {
+    await gitCommitChange(message)
+  }
+
+  async pushBranch(branchName: string): Promise<void> {
+    console.log('Skip pushing branch')
+  }
+}
+
+async function gitUserSetup() {
   // Use "github-action[bot]" user to commit
   // https://github.com/orgs/community/discussions/26560
   await exec.exec('git', ['config', 'user.name', '"github-actions[bot]"'])
@@ -12,11 +64,7 @@ export async function gitUserSetup() {
   ])
 }
 
-export function getNewBranchName(): string {
-  return `forge-action/${currentUnixTimestamp()}`
-}
-
-export async function switchBranch(branchName: string, needCreate: boolean) {
+async function gitSwitchBranch(branchName: string, needCreate: boolean) {
   let args: string[]
   if (needCreate) {
     args = ['switch', '-c', branchName]
@@ -29,7 +77,15 @@ export async function switchBranch(branchName: string, needCreate: boolean) {
   console.log('Switch branch to', branchName)
 }
 
-export async function commitChange(message: string) {
+async function gitCommitChange(message: string) {
   await exec.exec('git', ['add', '.'])
   await exec.exec('git', ['commit', '-m', message])
+}
+
+async function gitPushBranch(branchName: string) {
+  await exec.exec('git', ['push', 'origin', branchName])
+}
+
+export function getNewBranchName(): string {
+  return `forge-action/${currentUnixTimestamp()}`
 }

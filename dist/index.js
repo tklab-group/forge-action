@@ -30295,9 +30295,47 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.commitChange = exports.switchBranch = exports.getNewBranchName = exports.gitUserSetup = void 0;
+exports.getNewBranchName = exports.newGitManager = void 0;
 const exec = __importStar(__nccwpck_require__(1514));
 const util_1 = __nccwpck_require__(2629);
+function newGitManager() {
+    if (process.env.LOCAL_DEBUG === 'true') {
+        return new GitMockManager();
+    }
+    else {
+        return new GitManager();
+    }
+}
+exports.newGitManager = newGitManager;
+class GitManager {
+    async setup() {
+        await gitUserSetup();
+    }
+    async switchBranch(branchName, needCreate) {
+        await gitSwitchBranch(branchName, needCreate);
+    }
+    async commitChange(message) {
+        await gitCommitChange(message);
+    }
+    async pushBranch(branchName) {
+        await gitPushBranch(branchName);
+    }
+}
+// GitMockManager mocks methods to effect existing repositories.
+class GitMockManager {
+    async setup() {
+        await gitUserSetup();
+    }
+    async switchBranch(branchName, needCreate) {
+        await gitSwitchBranch(branchName, needCreate);
+    }
+    async commitChange(message) {
+        await gitCommitChange(message);
+    }
+    async pushBranch(branchName) {
+        console.log('Skip pushing branch');
+    }
+}
 async function gitUserSetup() {
     // Use "github-action[bot]" user to commit
     // https://github.com/orgs/community/discussions/26560
@@ -30308,12 +30346,7 @@ async function gitUserSetup() {
         '41898282+github-actions[bot]@users.noreply.github.com'
     ]);
 }
-exports.gitUserSetup = gitUserSetup;
-function getNewBranchName() {
-    return `forge-action/${(0, util_1.currentUnixTimestamp)()}`;
-}
-exports.getNewBranchName = getNewBranchName;
-async function switchBranch(branchName, needCreate) {
+async function gitSwitchBranch(branchName, needCreate) {
     let args;
     if (needCreate) {
         args = ['switch', '-c', branchName];
@@ -30324,12 +30357,17 @@ async function switchBranch(branchName, needCreate) {
     await exec.exec('git', args);
     console.log('Switch branch to', branchName);
 }
-exports.switchBranch = switchBranch;
-async function commitChange(message) {
+async function gitCommitChange(message) {
     await exec.exec('git', ['add', '.']);
     await exec.exec('git', ['commit', '-m', message]);
 }
-exports.commitChange = commitChange;
+async function gitPushBranch(branchName) {
+    await exec.exec('git', ['push', 'origin', branchName]);
+}
+function getNewBranchName() {
+    return `forge-action/${(0, util_1.currentUnixTimestamp)()}`;
+}
+exports.getNewBranchName = getNewBranchName;
 
 
 /***/ }),
@@ -30440,10 +30478,14 @@ async function run(inputs) {
         }
         core.group('Get vdiff', () => (0, forge_1.getVdiff)(vdiffBaseFilePath, tmpMoldfile));
         await replaceWithUpdatedMoldfile(moldfilePath, tmpMoldfile);
-        core.group('Setup git', () => (0, git_1.gitUserSetup)());
         const branchName = (0, git_1.getNewBranchName)();
-        await (0, git_1.switchBranch)(branchName, true);
-        await (0, git_1.commitChange)(`Update ${inputs.moldfile} with forege-action`);
+        core.startGroup('Git operation');
+        const gitManager = (0, git_1.newGitManager)();
+        await gitManager.setup();
+        await gitManager.switchBranch(branchName, true);
+        await gitManager.commitChange(`Update ${inputs.moldfile} with forge-action`);
+        await gitManager.pushBranch(branchName);
+        core.endGroup();
     }
     catch (error) {
         if (error instanceof Error)
