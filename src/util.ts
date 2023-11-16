@@ -41,3 +41,7 @@ export function isFileUpToDate(path: string, expectedContent: Buffer): boolean {
 
   return currentHash.digest().toString() === expectedHash.digest().toString()
 }
+
+export function currentUnixTimestamp() {
+  return Math.floor(Date.now() / 1000)
+}

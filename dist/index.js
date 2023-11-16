@@ -30294,15 +30294,36 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.gitUserSetup = void 0;
+exports.switchBranch = exports.getNewBranchName = exports.gitUserSetup = void 0;
 const exec = __importStar(__nccwpck_require__(1514));
+const util_1 = __nccwpck_require__(2629);
 async function gitUserSetup() {
     // Use "github-action[bot]" user to commit
     // https://github.com/orgs/community/discussions/26560
     exec.exec('git', ['config', 'user.name', '"github-actions[bot]"']);
-    exec.exec('git', ['config', 'user.email', "41898282+github-actions[bot]@users.noreply.github.com"]);
+    exec.exec('git', [
+        'config',
+        'user.email',
+        '41898282+github-actions[bot]@users.noreply.github.com'
+    ]);
 }
 exports.gitUserSetup = gitUserSetup;
+function getNewBranchName() {
+    return `forge-action/${(0, util_1.currentUnixTimestamp)()}`;
+}
+exports.getNewBranchName = getNewBranchName;
+async function switchBranch(branchName, needCreate) {
+    let args;
+    if (needCreate) {
+        args = ['switch', '-c', branchName];
+    }
+    else {
+        args = ['switch', branchName];
+    }
+    exec.exec('git', args);
+    console.log('Switch branch to', branchName);
+}
+exports.switchBranch = switchBranch;
 
 
 /***/ }),
@@ -30412,6 +30433,8 @@ async function run(inputs) {
         }
         core.group('Get vdiff', () => (0, forge_1.getVdiff)(vdiffBaseFilePath, tmpMoldfile));
         core.group('Setup git', () => (0, git_1.gitUserSetup)());
+        const branchName = (0, git_1.getNewBranchName)();
+        await (0, git_1.switchBranch)(branchName, true);
     }
     catch (error) {
         if (error instanceof Error)
@@ -30452,7 +30475,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.isFileUpToDate = exports.isFileExist = exports.createTempDirectory = void 0;
+exports.currentUnixTimestamp = exports.isFileUpToDate = exports.isFileExist = exports.createTempDirectory = void 0;
 const path = __importStar(__nccwpck_require__(1017));
 const io = __importStar(__nccwpck_require__(7436));
 const fs = __importStar(__nccwpck_require__(7147));
@@ -30489,6 +30512,10 @@ function isFileUpToDate(path, expectedContent) {
     return currentHash.digest().toString() === expectedHash.digest().toString();
 }
 exports.isFileUpToDate = isFileUpToDate;
+function currentUnixTimestamp() {
+    return Math.floor(Date.now() / 1000);
+}
+exports.currentUnixTimestamp = currentUnixTimestamp;
 
 
 /***/ }),
