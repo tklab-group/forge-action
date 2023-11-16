@@ -30302,6 +30302,7 @@ const inputs = {
     buildContext: core.getInput('build-context'),
     dockerfile: core.getInput('dockerfile'),
     moldfile: core.getInput('moldfile'),
+    updateStyle: core.getInput('update-style'),
     githubToken: core.getInput('github-token')
 };
 (0, main_1.run)(inputs);

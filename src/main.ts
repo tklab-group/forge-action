@@ -10,6 +10,7 @@ export interface Inputs {
   buildContext: string
   dockerfile: string
   moldfile: string
+  updateStyle: string
   githubToken: string
 }
 

@@ -22,4 +22,5 @@ jobs:
           build-context: '.'
           dockerfile: 'Dockerfile'
           moldfile: 'Dockerfile.mold'
+          update-style: 'new-pr'
           github-token: ${{ secrets.GITHUB_TOKEN }}

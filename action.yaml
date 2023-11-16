@@ -16,6 +16,13 @@ inputs:
   moldfile:
     description: 'The target Moldfile to update'
     required: true
+  update-stye:
+    description: |
+      The way to update a Moldfile. Default "new-pr".
+      new-pr: Create a new pull request with an updated Moldfile. If the event is "pull_request", the action add a comment to the original pull request to notify the new pull request created.
+      direct-commit: Create an update commit and push it on the same branch.
+    required: true
+    default: 'new-pr'
   github-token:
     description: 'for debug'
 runs:
