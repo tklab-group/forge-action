@@ -4,8 +4,8 @@ import { currentUnixTimestamp } from './util'
 export async function gitUserSetup() {
   // Use "github-action[bot]" user to commit
   // https://github.com/orgs/community/discussions/26560
-  exec.exec('git', ['config', 'user.name', '"github-actions[bot]"'])
-  exec.exec('git', [
+  await exec.exec('git', ['config', 'user.name', '"github-actions[bot]"'])
+  await exec.exec('git', [
     'config',
     'user.email',
     '41898282+github-actions[bot]@users.noreply.github.com'
@@ -24,7 +24,12 @@ export async function switchBranch(branchName: string, needCreate: boolean) {
     args = ['switch', branchName]
   }
 
-  exec.exec('git', args)
+  await exec.exec('git', args)
 
   console.log('Switch branch to', branchName)
+}
+
+export async function commitChange(message: string) {
+  await exec.exec('git', ['add', '.'])
+  await exec.exec('git', ['commit', '-m', message])
 }

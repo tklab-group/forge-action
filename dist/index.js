@@ -30294,14 +30294,14 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.switchBranch = exports.getNewBranchName = exports.gitUserSetup = void 0;
+exports.commitChange = exports.switchBranch = exports.getNewBranchName = exports.gitUserSetup = void 0;
 const exec = __importStar(__nccwpck_require__(1514));
 const util_1 = __nccwpck_require__(2629);
 async function gitUserSetup() {
     // Use "github-action[bot]" user to commit
     // https://github.com/orgs/community/discussions/26560
-    exec.exec('git', ['config', 'user.name', '"github-actions[bot]"']);
-    exec.exec('git', [
+    await exec.exec('git', ['config', 'user.name', '"github-actions[bot]"']);
+    await exec.exec('git', [
         'config',
         'user.email',
         '41898282+github-actions[bot]@users.noreply.github.com'
@@ -30320,10 +30320,15 @@ async function switchBranch(branchName, needCreate) {
     else {
         args = ['switch', branchName];
     }
-    exec.exec('git', args);
+    await exec.exec('git', args);
     console.log('Switch branch to', branchName);
 }
 exports.switchBranch = switchBranch;
+async function commitChange(message) {
+    await exec.exec('git', ['add', '.']);
+    await exec.exec('git', ['commit', '-m', message]);
+}
+exports.commitChange = commitChange;
 
 
 /***/ }),
@@ -30404,6 +30409,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = void 0;
 const core = __importStar(__nccwpck_require__(2186));
+const io = __importStar(__nccwpck_require__(7436));
 const forge_1 = __nccwpck_require__(9833);
 const util_1 = __nccwpck_require__(2629);
 const path = __importStar(__nccwpck_require__(1017));
@@ -30432,9 +30438,11 @@ async function run(inputs) {
             vdiffBaseFilePath = path.join(inputs.workingDirectory, inputs.dockerfile);
         }
         core.group('Get vdiff', () => (0, forge_1.getVdiff)(vdiffBaseFilePath, tmpMoldfile));
+        await replaceWithUpdatedMoldfile(moldfilePath, tmpMoldfile);
         core.group('Setup git', () => (0, git_1.gitUserSetup)());
         const branchName = (0, git_1.getNewBranchName)();
         await (0, git_1.switchBranch)(branchName, true);
+        await (0, git_1.commitChange)(`Update ${inputs.moldfile} with forege-action`);
     }
     catch (error) {
         if (error instanceof Error)
@@ -30442,6 +30450,9 @@ async function run(inputs) {
     }
 }
 exports.run = run;
+async function replaceWithUpdatedMoldfile(path, tmpMoldfile) {
+    await io.cp(tmpMoldfile, path);
+}
 
 
 /***/ }),
