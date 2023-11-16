@@ -3,6 +3,7 @@ import { generateMoldfile, getVdiff, installForge } from './forge'
 import { createTempDirectory, isFileExist, isFileUpToDate } from './util'
 import * as path from 'path'
 import * as fs from 'fs'
+import { gitUserSetup } from './git'
 
 export interface Inputs {
   version: string
@@ -58,6 +59,8 @@ export async function run(inputs: Inputs): Promise<void> {
     }
 
     core.group('Get vdiff', () => getVdiff(vdiffBaseFilePath, tmpMoldfile))
+
+    core.group('Setup git', () => gitUserSetup())
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }

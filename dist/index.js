@@ -30265,6 +30265,48 @@ exports.getVdiff = getVdiff;
 
 /***/ }),
 
+/***/ 6350:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.gitUserSetup = void 0;
+const exec = __importStar(__nccwpck_require__(1514));
+async function gitUserSetup() {
+    // Use "github-action[bot]" user to commit
+    // https://github.com/orgs/community/discussions/26560
+    exec.exec('git', ['config', 'user.name', '"github-actions[bot]"']);
+    exec.exec('git', ['config', 'user.email', "41898282+github-actions[bot]@users.noreply.github.com"]);
+}
+exports.gitUserSetup = gitUserSetup;
+
+
+/***/ }),
+
 /***/ 6144:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -30345,6 +30387,7 @@ const forge_1 = __nccwpck_require__(9833);
 const util_1 = __nccwpck_require__(2629);
 const path = __importStar(__nccwpck_require__(1017));
 const fs = __importStar(__nccwpck_require__(7147));
+const git_1 = __nccwpck_require__(6350);
 async function run(inputs) {
     try {
         await core.group('Install forge', () => (0, forge_1.installForge)(inputs.version, inputs.githubToken));
@@ -30368,6 +30411,7 @@ async function run(inputs) {
             vdiffBaseFilePath = path.join(inputs.workingDirectory, inputs.dockerfile);
         }
         core.group('Get vdiff', () => (0, forge_1.getVdiff)(vdiffBaseFilePath, tmpMoldfile));
+        core.group('Setup git', () => (0, git_1.gitUserSetup)());
     }
     catch (error) {
         if (error instanceof Error)
