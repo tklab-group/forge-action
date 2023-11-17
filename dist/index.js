@@ -34651,6 +34651,80 @@ exports.getNewBranchName = getNewBranchName;
 
 /***/ }),
 
+/***/ 978:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.newGitHubManager = void 0;
+const gh = __importStar(__nccwpck_require__(5438));
+const util_1 = __nccwpck_require__(2629);
+function newGitHubManager(context, githubToken) {
+    if ((0, util_1.isLocalDebug)()) {
+        console.log('Use GitHubMockManager');
+        return new GitHubMockManager();
+    }
+    else {
+        return new GitHubManager(context, githubToken);
+    }
+}
+exports.newGitHubManager = newGitHubManager;
+class GitHubManager {
+    githubToken;
+    context;
+    constructor(context, githubToken) {
+        this.githubToken = githubToken;
+        this.context = context;
+    }
+    async createPullRequest(baseBranch, headBranch, title, description) {
+        const octkit = gh.getOctokit(this.githubToken);
+        const { data } = await octkit.rest.pulls.create({
+            ...this.context.repo,
+            base: baseBranch,
+            head: headBranch,
+            title: title,
+            body: description
+        });
+        return data.number;
+    }
+}
+class GitHubMockManager {
+    async createPullRequest(baseBranch, headBranch, title, description) {
+        console.log('Skip to create a pull request');
+        console.log(`base: ${baseBranch} <- head: ${headBranch}`);
+        console.log(`title: ${title}`);
+        console.log(`description: ${description}`);
+        return 0;
+    }
+}
+
+
+/***/ }),
+
 /***/ 6144:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -34680,15 +34754,27 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+const process_1 = __nccwpck_require__(7282);
 const main_1 = __nccwpck_require__(399);
 const core = __importStar(__nccwpck_require__(2186));
+const updateStyleStr = core.getInput('update-style');
+let updateStyle;
+switch (updateStyleStr) {
+    case 'new-pr':
+    case 'direct-commit':
+        updateStyle = updateStyleStr;
+        break;
+    default:
+        core.error(`"update-style" must be "new-pr" or "direct-commit" but "${updateStyleStr}"`);
+        (0, process_1.exit)(1);
+}
 const inputs = {
     version: core.getInput('version'),
     workingDirectory: core.getInput('working-directory'),
     buildContext: core.getInput('build-context'),
     dockerfile: core.getInput('dockerfile'),
     moldfile: core.getInput('moldfile'),
-    updateStyle: core.getInput('update-style'),
+    updateStyle: updateStyle,
     githubToken: core.getInput('github-token')
 };
 (0, main_1.run)(inputs);
@@ -34734,6 +34820,7 @@ const path = __importStar(__nccwpck_require__(1017));
 const fs = __importStar(__nccwpck_require__(7147));
 const git_1 = __nccwpck_require__(6350);
 const actions_1 = __nccwpck_require__(7014);
+const github_1 = __nccwpck_require__(978);
 async function run(inputs) {
     try {
         const actionInfo = (0, actions_1.getRunningActionInfo)();
@@ -34749,25 +34836,26 @@ async function run(inputs) {
             const generatedMoldfileContent = fs.readFileSync(tmpMoldfile);
             isMoldfileUpToDate = (0, util_1.isFileUpToDate)(moldfilePath, generatedMoldfileContent);
         }
+        console.log('Is Moldfile up-to-date:', isMoldfileUpToDate);
         if (isMoldfileUpToDate) {
             core.info('Moldfile is up-to-date');
             return;
         }
-        console.log('Is Moldfile up-to-date:', isMoldfileUpToDate);
         let vdiffBaseFilePath = moldfilePath;
         if (!moldfileExist) {
             vdiffBaseFilePath = path.join(inputs.workingDirectory, inputs.dockerfile);
         }
         core.group('Get vdiff', () => (0, forge_1.getVdiff)(vdiffBaseFilePath, tmpMoldfile));
         await replaceWithUpdatedMoldfile(moldfilePath, tmpMoldfile);
-        const branchName = (0, git_1.getNewBranchName)();
-        core.startGroup('Git operation');
-        const gitManager = (0, git_1.newGitManager)();
-        await gitManager.setup();
-        await gitManager.switchBranch(branchName, true);
-        await gitManager.commitChange(`Update ${inputs.moldfile} with forge-action`);
-        await gitManager.pushBranch(branchName);
-        core.endGroup();
+        switch (inputs.updateStyle) {
+            case 'new-pr':
+                core.group('Push updated Moldfile with a new pull requesl', () => pushUpdateWithNewPr(actionInfo, inputs));
+                break;
+            case 'direct-commit':
+                core.group('Push update Moldfile to the same branch', () => pushUpdateAsDirectCommit(actionInfo, inputs));
+                break;
+        }
+        console.log('Done');
     }
     catch (error) {
         if (error instanceof Error)
@@ -34777,6 +34865,33 @@ async function run(inputs) {
 exports.run = run;
 async function replaceWithUpdatedMoldfile(path, tmpMoldfile) {
     await io.cp(tmpMoldfile, path);
+}
+async function pushUpdateWithNewPr(actionInfo, inputs) {
+    const newBranchName = (0, git_1.getNewBranchName)();
+    const gitManager = (0, git_1.newGitManager)();
+    await gitManager.setup();
+    await gitManager.switchBranch(newBranchName, true);
+    await gitManager.commitChange(`Update ${inputs.moldfile} with forge-action`);
+    await gitManager.pushBranch(newBranchName);
+    let prTitle = `Update ${inputs.moldfile} with forge-action`;
+    if (actionInfo.pullRequestId) {
+        prTitle += ` for #{actionInfo.pullRequestId}`;
+    }
+    else if (!(actionInfo.triggerdBranch === 'main' ||
+        actionInfo.triggerdBranch === ' master')) {
+        prTitle += ` for ${actionInfo.triggerdBranch}`;
+    }
+    let descriotion = ''; // TODO
+    const githubManager = (0, github_1.newGitHubManager)(actionInfo.context, inputs.githubToken);
+    const newPrId = await githubManager.createPullRequest(actionInfo.triggerdBranch, newBranchName, prTitle, descriotion);
+    // TODO
+}
+async function pushUpdateAsDirectCommit(actionInfo, inputs) {
+    const gitManager = (0, git_1.newGitManager)();
+    await gitManager.setup();
+    await gitManager.switchBranch(actionInfo.triggerdBranch, false);
+    await gitManager.commitChange(`Update ${inputs.moldfile} with forge-action`);
+    await gitManager.pushBranch(actionInfo.triggerdBranch);
 }
 
 
@@ -35009,6 +35124,14 @@ module.exports = require("path");
 
 "use strict";
 module.exports = require("perf_hooks");
+
+/***/ }),
+
+/***/ 7282:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("process");
 
 /***/ }),
 

@@ -5,7 +5,8 @@ import { createTempDirectory, isFileExist, isFileUpToDate } from './util'
 import * as path from 'path'
 import * as fs from 'fs'
 import { getNewBranchName, newGitManager } from './git'
-import { getRunningActionInfo } from './actions'
+import { ActionInfo, getRunningActionInfo } from './actions'
+import { newGitHubManager } from './github'
 
 export type UpdateStyle = 'new-pr' | 'direct-commit'
 
@@ -69,15 +70,20 @@ export async function run(inputs: Inputs): Promise<void> {
 
     await replaceWithUpdatedMoldfile(moldfilePath, tmpMoldfile)
 
-    const branchName = getNewBranchName()
+    switch (inputs.updateStyle) {
+      case 'new-pr':
+        core.group('Push updated Moldfile with a new pull requesl', () =>
+          pushUpdateWithNewPr(actionInfo, inputs)
+        )
+        break
+      case 'direct-commit':
+        core.group('Push update Moldfile to the same branch', () =>
+          pushUpdateAsDirectCommit(actionInfo, inputs)
+        )
+        break
+    }
 
-    core.startGroup('Git operation')
-    const gitManager = newGitManager()
-    await gitManager.setup()
-    await gitManager.switchBranch(branchName, true)
-    await gitManager.commitChange(`Update ${inputs.moldfile} with forge-action`)
-    await gitManager.pushBranch(branchName)
-    core.endGroup()
+    console.log('Done')
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }
@@ -85,4 +91,49 @@ export async function run(inputs: Inputs): Promise<void> {
 
 async function replaceWithUpdatedMoldfile(path: string, tmpMoldfile: string) {
   await io.cp(tmpMoldfile, path)
+}
+
+async function pushUpdateWithNewPr(actionInfo: ActionInfo, inputs: Inputs) {
+  const newBranchName = getNewBranchName()
+
+  const gitManager = newGitManager()
+  await gitManager.setup()
+  await gitManager.switchBranch(newBranchName, true)
+  await gitManager.commitChange(`Update ${inputs.moldfile} with forge-action`)
+  await gitManager.pushBranch(newBranchName)
+
+  let prTitle = `Update ${inputs.moldfile} with forge-action`
+  if (actionInfo.pullRequestId) {
+    prTitle += ` for #{actionInfo.pullRequestId}`
+  } else if (
+    !(
+      actionInfo.triggerdBranch === 'main' ||
+      actionInfo.triggerdBranch === ' master'
+    )
+  ) {
+    prTitle += ` for ${actionInfo.triggerdBranch}`
+  }
+
+  let descriotion = '' // TODO
+
+  const githubManager = newGitHubManager(actionInfo.context, inputs.githubToken)
+  const newPrId = await githubManager.createPullRequest(
+    actionInfo.triggerdBranch,
+    newBranchName,
+    prTitle,
+    descriotion
+  )
+
+  // TODO
+}
+
+async function pushUpdateAsDirectCommit(
+  actionInfo: ActionInfo,
+  inputs: Inputs
+) {
+  const gitManager = newGitManager()
+  await gitManager.setup()
+  await gitManager.switchBranch(actionInfo.triggerdBranch, false)
+  await gitManager.commitChange(`Update ${inputs.moldfile} with forge-action`)
+  await gitManager.pushBranch(actionInfo.triggerdBranch)
 }
