@@ -7,13 +7,15 @@ import * as fs from 'fs'
 import { getNewBranchName, newGitManager } from './git'
 import { getRunningActionInfo } from './actions'
 
+export type UpdateStyle = 'new-pr' | 'direct-commit'
+
 export interface Inputs {
   version: string
   workingDirectory: string
   buildContext: string
   dockerfile: string
   moldfile: string
-  updateStyle: string
+  updateStyle: UpdateStyle
   githubToken: string
 }
 
@@ -51,12 +53,12 @@ export async function run(inputs: Inputs): Promise<void> {
       )
     }
 
+    console.log('Is Moldfile up-to-date:', isMoldfileUpToDate)
+
     if (isMoldfileUpToDate) {
       core.info('Moldfile is up-to-date')
       return
     }
-
-    console.log('Is Moldfile up-to-date:', isMoldfileUpToDate)
 
     let vdiffBaseFilePath = moldfilePath
     if (!moldfileExist) {
