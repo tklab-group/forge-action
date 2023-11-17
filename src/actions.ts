@@ -1,36 +1,35 @@
+import * as gh from '@actions/github'
+import { Context } from '@actions/github/lib/context'
+
 export interface ActionInfo {
-  repository: string // e.g. 'octcat/Hello-World'
-  eventName?: string
+  context: Context
+  repositoryOwner: string
+  repositoryName: string
+  eventName: string
   triggerdBranch: string
-  pullRequestId?: string
+  pullRequestId?: number
 }
 
 export function getRunningActionInfo(): ActionInfo {
   // https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables
 
-  const repository = process.env.GITHUB_REPOSITORY
-  if (!repository) {
-    throw Error('GITHUB_REPOSITOY is unset')
-  }
+  const context = gh.context
 
-  const eventName = process.env.GTIHUB_EVENT_NAME
+  const { owner, repo } = context.repo
+
+  const eventName = context.eventName
 
   const triggerdBranch = process.env.GITHUB_REF_NAME
   if (!triggerdBranch) {
     throw Error('GITHUB_REF_NAME is unset')
   }
 
-  let pullRequestId: string | undefined
-
-  const githubRef = process.env.GTIHUB_REF
-  if (githubRef) {
-    if (githubRef.startsWith('refs/pull/')) {
-      pullRequestId = githubRef.match(/refs\/pull\/(.+)\/merge/)?.at(1)
-    }
-  }
+  const pullRequestId = context.payload.pull_request?.number
 
   return {
-    repository: repository,
+    context: context,
+    repositoryOwner: owner,
+    repositoryName: repo,
     eventName: eventName,
     triggerdBranch: triggerdBranch,
     pullRequestId: pullRequestId
