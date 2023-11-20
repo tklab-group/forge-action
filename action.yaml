@@ -24,7 +24,7 @@ inputs:
     required: true
     default: 'new-pr'
   github-token:
-    description: 'Use `${{ secrets.GITHUB_TOKEN }}`'
+    description: 'Need permission to write the repository'
   forge-install-token:
     description: 'Required while forge repository is private'
 runs:
