@@ -34426,9 +34426,13 @@ function getRunningActionInfo() {
     const context = gh.context;
     const { owner, repo } = context.repo;
     const eventName = context.eventName;
-    const triggerdBranch = process.env.GITHUB_REF_NAME;
+    let triggerdBranch;
+    triggerdBranch = process.env.GITHUB_HEAD_REF;
     if (!triggerdBranch) {
-        throw Error('GITHUB_REF_NAME is unset');
+        triggerdBranch = process.env.GITHUB_REF_NAME;
+    }
+    if (!triggerdBranch) {
+        throw Error('faild to get triggerdBranch');
     }
     const pullRequestId = context.payload.pull_request?.number;
     return {
