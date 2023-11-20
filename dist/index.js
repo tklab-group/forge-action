@@ -34981,7 +34981,9 @@ async function pushUpdateWithNewPr(actionInfo, inputs, vdiff, moldfilePath, mold
             file: moldfilePath
         });
     }
-    await githubManager.commentOnPullRequest(newPrId, `Merge #${newPrId} to this branch to update ${inputs.moldfile}`);
+    if (actionInfo.pullRequestId) {
+        await githubManager.commentOnPullRequest(actionInfo.pullRequestId, `Merge #${newPrId} to this branch to update ${inputs.moldfile}`);
+    }
 }
 async function pushUpdateAsDirectCommit(actionInfo, inputs) {
     const gitManager = (0, git_1.newGitManager)();

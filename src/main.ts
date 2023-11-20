@@ -149,10 +149,12 @@ async function pushUpdateWithNewPr(
     })
   }
 
-  await githubManager.commentOnPullRequest(
-    newPrId,
-    `Merge #${newPrId} to this branch to update ${inputs.moldfile}`
-  )
+  if (actionInfo.pullRequestId) {
+    await githubManager.commentOnPullRequest(
+      actionInfo.pullRequestId,
+      `Merge #${newPrId} to this branch to update ${inputs.moldfile}`
+    )
+  }
 }
 
 async function pushUpdateAsDirectCommit(
