@@ -3,6 +3,7 @@ export interface Vdiff {
 }
 
 export interface BuildStage {
+  stageName: string
   baseImage: BaseImage
   packages: PackageInfo[]
 }

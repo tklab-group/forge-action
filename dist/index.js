@@ -34482,7 +34482,7 @@ const fs = __importStar(__nccwpck_require__(7147));
 const util_1 = __nccwpck_require__(2629);
 const path = __importStar(__nccwpck_require__(1017));
 const semver = __importStar(__nccwpck_require__(1383));
-const requiredForgeVersion = '>=v0.0.4';
+const requiredForgeVersion = '>=v0.0.5';
 async function installForge(version, githubToken) {
     try {
         const goExecPath = await io.which('go', true);
