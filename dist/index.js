@@ -34553,7 +34553,7 @@ const util_1 = __nccwpck_require__(2629);
 const path = __importStar(__nccwpck_require__(1017));
 const semver = __importStar(__nccwpck_require__(1383));
 const requiredForgeVersion = '>=v0.0.5';
-async function installForge(version, githubToken) {
+async function installForge(version) {
     try {
         const goExecPath = await io.which('go', true);
         core.debug('stdout of `which go`:' + goExecPath);
@@ -34564,12 +34564,13 @@ async function installForge(version, githubToken) {
         throw new Error('Setup Go environment before using this action');
     }
     // TODO: Remove and improve after the repository becoming public
-    await installPrivateForge(version, githubToken);
+    await installPrivateForge(version);
     await validateInstalledVersion();
 }
 exports.installForge = installForge;
-async function installPrivateForge(version, githubToken) {
-    await exec.exec(`git config --global url."https://${githubToken}:x-oauth-basic@github.com/".insteadOf "https://github.com/"`);
+const forgeInstallToken = core.getInput('forge-install-token');
+async function installPrivateForge(version) {
+    await exec.exec(`git config --global url."https://${forgeInstallToken}:x-oauth-basic@github.com/".insteadOf "https://github.com/"`);
     await exec.exec('go', ['env', '-w', 'GOPRIVATE=github.com/tklab-group']);
     await exec.exec('go', ['install', `github.com/tklab-group/forge@${version}`]);
 }
@@ -34909,7 +34910,7 @@ async function run(inputs) {
     try {
         const actionInfo = (0, actions_1.getRunningActionInfo)();
         console.log('Running action information', actionInfo);
-        await core.group('Install forge', () => (0, forge_1.installForge)(inputs.version, inputs.githubToken));
+        await core.group('Install forge', () => (0, forge_1.installForge)(inputs.version));
         const tmpDir = await (0, util_1.createTempDirectory)();
         const tmpMoldfile = path.join(tmpDir, 'Dockerfile.mold');
         await core.group('Generate Moldfile', () => (0, forge_1.generateMoldfile)(inputs.workingDirectory, inputs.buildContext, inputs.dockerfile, tmpMoldfile));

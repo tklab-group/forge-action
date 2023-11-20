@@ -9,7 +9,7 @@ import * as semver from 'semver'
 
 const requiredForgeVersion = '>=v0.0.5'
 
-export async function installForge(version: string, githubToken: string) {
+export async function installForge(version: string) {
   try {
     const goExecPath = await io.which('go', true)
     core.debug('stdout of `which go`:' + goExecPath)
@@ -19,14 +19,15 @@ export async function installForge(version: string, githubToken: string) {
   }
 
   // TODO: Remove and improve after the repository becoming public
-  await installPrivateForge(version, githubToken)
+  await installPrivateForge(version)
 
   await validateInstalledVersion()
 }
 
-async function installPrivateForge(version: string, githubToken: string) {
+const forgeInstallToken = core.getInput('forge-install-token')
+async function installPrivateForge(version: string) {
   await exec.exec(
-    `git config --global url."https://${githubToken}:x-oauth-basic@github.com/".insteadOf "https://github.com/"`
+    `git config --global url."https://${forgeInstallToken}:x-oauth-basic@github.com/".insteadOf "https://github.com/"`
   )
   await exec.exec('go', ['env', '-w', 'GOPRIVATE=github.com/tklab-group'])
 

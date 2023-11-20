@@ -27,9 +27,7 @@ export async function run(inputs: Inputs): Promise<void> {
     const actionInfo = getRunningActionInfo()
     console.log('Running action information', actionInfo)
 
-    await core.group('Install forge', () =>
-      installForge(inputs.version, inputs.githubToken)
-    )
+    await core.group('Install forge', () => installForge(inputs.version))
 
     const tmpDir = await createTempDirectory()
     const tmpMoldfile = path.join(tmpDir, 'Dockerfile.mold')

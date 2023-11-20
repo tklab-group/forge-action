@@ -24,7 +24,9 @@ inputs:
     required: true
     default: 'new-pr'
   github-token:
-    description: 'for debug'
+    description: 'Use `${{ secrets.GITHUB_TOKEN }}`'
+  forge-install-token:
+    description: 'Required while forge repository is private'
 runs:
   using: 'node20'
   main: 'dist/index.js'
