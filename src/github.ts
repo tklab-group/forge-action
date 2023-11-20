@@ -9,6 +9,7 @@ export interface GitHubManagerInterface {
     title: string,
     description: string
   ): Promise<number>
+  commentOnPullRequest(pullRequestId: number, comment: string): Promise<void>
 }
 
 export function newGitHubManager(context: Context, githubToken: string) {
@@ -47,6 +48,19 @@ class GitHubManager implements GitHubManagerInterface {
 
     return data.number
   }
+
+  async commentOnPullRequest(
+    pullRequestId: number,
+    comment: string
+  ): Promise<void> {
+    const octkit = gh.getOctokit(this.githubToken)
+
+    await octkit.rest.issues.createComment({
+      ...this.context.repo,
+      issue_number: pullRequestId,
+      body: comment
+    })
+  }
 }
 
 class GitHubMockManager implements GitHubManagerInterface {
@@ -62,5 +76,14 @@ class GitHubMockManager implements GitHubManagerInterface {
     console.log(`description: ${description}`)
 
     return 0
+  }
+
+  async commentOnPullRequest(
+    pullRequestId: number,
+    comment: string
+  ): Promise<void> {
+    console.log('Skip to comment on a pull request')
+    console.log(`target: ${pullRequestId}`)
+    console.log(`comment: ${comment}`)
   }
 }

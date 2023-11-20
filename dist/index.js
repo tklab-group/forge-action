@@ -34777,6 +34777,14 @@ class GitHubManager {
         });
         return data.number;
     }
+    async commentOnPullRequest(pullRequestId, comment) {
+        const octkit = gh.getOctokit(this.githubToken);
+        await octkit.rest.issues.createComment({
+            ...this.context.repo,
+            issue_number: pullRequestId,
+            body: comment
+        });
+    }
 }
 class GitHubMockManager {
     async createPullRequest(baseBranch, headBranch, title, description) {
@@ -34785,6 +34793,11 @@ class GitHubMockManager {
         console.log(`title: ${title}`);
         console.log(`description: ${description}`);
         return 0;
+    }
+    async commentOnPullRequest(pullRequestId, comment) {
+        console.log('Skip to comment on a pull request');
+        console.log(`target: ${pullRequestId}`);
+        console.log(`comment: ${comment}`);
     }
 }
 
@@ -34918,7 +34931,7 @@ async function run(inputs) {
         await replaceWithUpdatedMoldfile(moldfilePath, tmpMoldfile);
         switch (inputs.updateStyle) {
             case 'new-pr':
-                core.group('Push updated Moldfile with a new pull requesl', () => pushUpdateWithNewPr(actionInfo, inputs, vdiffInfo, moldfilePath));
+                core.group('Push updated Moldfile with a new pull request', () => pushUpdateWithNewPr(actionInfo, inputs, vdiffInfo, moldfilePath, moldfileExist));
                 break;
             case 'direct-commit':
                 core.group('Push update Moldfile to the same branch', () => pushUpdateAsDirectCommit(actionInfo, inputs));
@@ -34935,7 +34948,7 @@ exports.run = run;
 async function replaceWithUpdatedMoldfile(path, tmpMoldfile) {
     await io.cp(tmpMoldfile, path);
 }
-async function pushUpdateWithNewPr(actionInfo, inputs, vdiff, moldfilePath) {
+async function pushUpdateWithNewPr(actionInfo, inputs, vdiff, moldfilePath, moldfileExist) {
     const newBranchName = (0, git_1.getNewBranchName)();
     const gitManager = (0, git_1.newGitManager)();
     await gitManager.setup();
@@ -34957,10 +34970,13 @@ async function pushUpdateWithNewPr(actionInfo, inputs, vdiff, moldfilePath) {
     descriotion += (0, changeInfo_1.changeInfoText)(vdiff);
     const githubManager = (0, github_1.newGitHubManager)(actionInfo.context, inputs.githubToken);
     const newPrId = await githubManager.createPullRequest(actionInfo.triggerdBranch, newBranchName, prTitle, descriotion);
-    core.error(`Merge #${newPrId} to update`, {
-        title: "This Moldfile isn't up-to-date",
-        file: moldfilePath
-    });
+    if (moldfileExist) {
+        core.error(`Merge #${newPrId} to update`, {
+            title: "This Moldfile isn't up-to-date",
+            file: moldfilePath
+        });
+    }
+    await githubManager.commentOnPullRequest(newPrId, `Merge #${newPrId} to this branch to update ${inputs.moldfile}`);
 }
 async function pushUpdateAsDirectCommit(actionInfo, inputs) {
     const gitManager = (0, git_1.newGitManager)();
