@@ -41,7 +41,7 @@ function changeInfoBaseImage(baseImage: BaseImage): string {
 
   const elements: string[] = []
 
-  const header = 'Base image update'
+  const header = '### Base Image Update'
   elements.push(header)
 
   const trimLongSha = (s: string) =>
@@ -52,7 +52,7 @@ function changeInfoBaseImage(baseImage: BaseImage): string {
 
   const table = toMarkdownTable(
     ['Image', 'Update'],
-    [[baseImage.name, `${before} to ${after}`]]
+    [[baseImage.name, `\`${before}\` to \`${after}\``]]
   )
   elements.push(table)
 
@@ -62,7 +62,7 @@ function changeInfoBaseImage(baseImage: BaseImage): string {
 function changeInfoPackages(packages: PackageInfo[]): string {
   const elements: string[] = []
 
-  const header = 'Package Updates'
+  const header = '### Package Updates'
   elements.push(header)
 
   const updatedPackages = packages.filter(p => p.moldfile1 !== p.moldfile2)
@@ -75,7 +75,11 @@ function changeInfoPackages(packages: PackageInfo[]): string {
 
   const packageTableElements = updatedPackages.map(p => {
     const baseVersion = p.moldfile1 !== '' ? p.moldfile1 : '-'
-    return [p.name, p.packageManager, `${baseVersion} to ${p.moldfile2}`]
+    return [
+      p.name,
+      p.packageManager,
+      `\`${baseVersion}\` to \`${p.moldfile2}\``
+    ]
   })
 
   const table = toMarkdownTable(top, packageTableElements)

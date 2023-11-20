@@ -34481,18 +34481,18 @@ function changeInfoBaseImage(baseImage) {
         return 'No base image update';
     }
     const elements = [];
-    const header = 'Base image update';
+    const header = '### Base Image Update';
     elements.push(header);
     const trimLongSha = (s) => s.startsWith('@sha') ? `${s.substring(0, 20)}...` : s;
     const before = trimLongSha(baseImage.moldfile1);
     const after = trimLongSha(baseImage.moldfile2);
-    const table = (0, util_1.toMarkdownTable)(['Image', 'Update'], [[baseImage.name, `${before} to ${after}`]]);
+    const table = (0, util_1.toMarkdownTable)(['Image', 'Update'], [[baseImage.name, `\`${before}\` to \`${after}\``]]);
     elements.push(table);
     return elements.join('\n');
 }
 function changeInfoPackages(packages) {
     const elements = [];
-    const header = 'Package Updates';
+    const header = '### Package Updates';
     elements.push(header);
     const updatedPackages = packages.filter(p => p.moldfile1 !== p.moldfile2);
     if (updatedPackages.length === 0) {
@@ -34501,7 +34501,11 @@ function changeInfoPackages(packages) {
     const top = ['Package', 'PackageManager', 'Update'];
     const packageTableElements = updatedPackages.map(p => {
         const baseVersion = p.moldfile1 !== '' ? p.moldfile1 : '-';
-        return [p.name, p.packageManager, `${baseVersion} to ${p.moldfile2}`];
+        return [
+            p.name,
+            p.packageManager,
+            `\`${baseVersion}\` to \`${p.moldfile2}\``
+        ];
     });
     const table = (0, util_1.toMarkdownTable)(top, packageTableElements);
     elements.push(table);
