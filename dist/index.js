@@ -34674,6 +34674,9 @@ class GitManager {
     async pushBranch(branchName) {
         await gitPushBranch(branchName);
     }
+    async fetchBranch(branchName) {
+        await exec.exec('git', ['fetch', 'origin', branchName]);
+    }
 }
 // GitMockManager mocks methods to effect existing repositories.
 class GitMockManager {
@@ -34688,6 +34691,9 @@ class GitMockManager {
     }
     async pushBranch(branchName) {
         console.log('Skip pushing branch', branchName);
+    }
+    async fetchBranch(branchName) {
+        console.log('Skip fetching branch', branchName);
     }
 }
 async function gitUserSetup() {
@@ -34992,6 +34998,7 @@ async function pushUpdateWithNewPr(actionInfo, inputs, vdiff, moldfilePath, mold
 async function pushUpdateAsDirectCommit(actionInfo, inputs) {
     const gitManager = (0, git_1.newGitManager)();
     await gitManager.setup();
+    await gitManager.fetchBranch(actionInfo.triggerdBranch);
     await gitManager.switchBranch(actionInfo.triggerdBranch, false);
     await gitManager.commitChange(`Update ${inputs.moldfile} with forge-action`);
     await gitManager.pushBranch(actionInfo.triggerdBranch);

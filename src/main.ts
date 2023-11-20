@@ -163,6 +163,7 @@ async function pushUpdateAsDirectCommit(
 ) {
   const gitManager = newGitManager()
   await gitManager.setup()
+  await gitManager.fetchBranch(actionInfo.triggerdBranch)
   await gitManager.switchBranch(actionInfo.triggerdBranch, false)
   await gitManager.commitChange(`Update ${inputs.moldfile} with forge-action`)
   await gitManager.pushBranch(actionInfo.triggerdBranch)

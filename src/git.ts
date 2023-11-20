@@ -6,6 +6,7 @@ export interface GitManagerInterface {
   switchBranch(branchName: string, needCreate: boolean): Promise<void>
   commitChange(message: string): Promise<void>
   pushBranch(branchName: string): Promise<void>
+  fetchBranch(branchName: string): Promise<void>
 }
 
 export function newGitManager(): GitManagerInterface {
@@ -33,6 +34,10 @@ class GitManager implements GitManagerInterface {
   async pushBranch(branchName: string): Promise<void> {
     await gitPushBranch(branchName)
   }
+
+  async fetchBranch(branchName: string): Promise<void> {
+    await exec.exec('git', ['fetch', 'origin', branchName])
+  }
 }
 
 // GitMockManager mocks methods to effect existing repositories.
@@ -51,6 +56,10 @@ class GitMockManager implements GitManagerInterface {
 
   async pushBranch(branchName: string): Promise<void> {
     console.log('Skip pushing branch', branchName)
+  }
+
+  async fetchBranch(branchName: string): Promise<void> {
+    console.log('Skip fetching branch', branchName)
   }
 }
 
