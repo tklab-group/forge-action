@@ -77,7 +77,7 @@ export async function run(inputs: Inputs): Promise<void> {
     switch (inputs.updateStyle) {
       case 'new-pr':
         core.group('Push updated Moldfile with a new pull requesl', () =>
-          pushUpdateWithNewPr(actionInfo, inputs, vdiffInfo)
+          pushUpdateWithNewPr(actionInfo, inputs, vdiffInfo, moldfilePath)
         )
         break
       case 'direct-commit':
@@ -100,7 +100,8 @@ async function replaceWithUpdatedMoldfile(path: string, tmpMoldfile: string) {
 async function pushUpdateWithNewPr(
   actionInfo: ActionInfo,
   inputs: Inputs,
-  vdiff: Vdiff
+  vdiff: Vdiff,
+  moldfilePath: string
 ) {
   const newBranchName = getNewBranchName()
 
@@ -136,7 +137,10 @@ async function pushUpdateWithNewPr(
     descriotion
   )
 
-  // TODO
+  core.error(`Merge #${newPrId} to update`, {
+    title: "This Moldfile isn't up-to-date",
+    file: moldfilePath
+  })
 }
 
 async function pushUpdateAsDirectCommit(
