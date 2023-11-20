@@ -49,3 +49,24 @@ export function currentUnixTimestamp() {
 export function isLocalDebug(): boolean {
   return process.env.LOCAL_DEBUG === 'true'
 }
+
+export function toMarkdownTable(top: string[], rows: string[][]): string {
+  const columnLength = top.length
+
+  const elements: string[] = []
+
+  const topText = toMarkdownTableRow(top)
+  elements.push(topText)
+
+  const separator = toMarkdownTableRow(Array(columnLength).fill('---'))
+  elements.push(separator)
+
+  const rowTexts = rows.map(row => toMarkdownTableRow(row))
+  elements.push.apply(elements, rowTexts)
+
+  return elements.join('\n')
+}
+
+function toMarkdownTableRow(list: string[]): string {
+  return `| ${list.join(' | ')} |`
+}

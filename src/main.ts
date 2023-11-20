@@ -7,6 +7,8 @@ import * as fs from 'fs'
 import { getNewBranchName, newGitManager } from './git'
 import { ActionInfo, getRunningActionInfo } from './actions'
 import { newGitHubManager } from './github'
+import { Vdiff } from './vdiff'
+import { changeInfoText } from './changeInfo'
 
 export type UpdateStyle = 'new-pr' | 'direct-commit'
 
@@ -66,14 +68,16 @@ export async function run(inputs: Inputs): Promise<void> {
       vdiffBaseFilePath = path.join(inputs.workingDirectory, inputs.dockerfile)
     }
 
-    core.group('Get vdiff', () => getVdiff(vdiffBaseFilePath, tmpMoldfile))
+    core.startGroup('Get vdiff')
+    const vdiffInfo = await getVdiff(vdiffBaseFilePath, tmpMoldfile)
+    core.endGroup()
 
     await replaceWithUpdatedMoldfile(moldfilePath, tmpMoldfile)
 
     switch (inputs.updateStyle) {
       case 'new-pr':
         core.group('Push updated Moldfile with a new pull requesl', () =>
-          pushUpdateWithNewPr(actionInfo, inputs)
+          pushUpdateWithNewPr(actionInfo, inputs, vdiffInfo)
         )
         break
       case 'direct-commit':
@@ -93,7 +97,11 @@ async function replaceWithUpdatedMoldfile(path: string, tmpMoldfile: string) {
   await io.cp(tmpMoldfile, path)
 }
 
-async function pushUpdateWithNewPr(actionInfo: ActionInfo, inputs: Inputs) {
+async function pushUpdateWithNewPr(
+  actionInfo: ActionInfo,
+  inputs: Inputs,
+  vdiff: Vdiff
+) {
   const newBranchName = getNewBranchName()
 
   const gitManager = newGitManager()
@@ -103,8 +111,10 @@ async function pushUpdateWithNewPr(actionInfo: ActionInfo, inputs: Inputs) {
   await gitManager.pushBranch(newBranchName)
 
   let prTitle = `Update ${inputs.moldfile} with forge-action`
+  let descriotion = `New ${inputs.moldfile} generated based on ${inputs.dockerfile}`
   if (actionInfo.pullRequestId) {
-    prTitle += ` for #{actionInfo.pullRequestId}`
+    prTitle += ` for #${actionInfo.pullRequestId}`
+    descriotion += ` for #${actionInfo.pullRequestId}`
   } else if (
     !(
       actionInfo.triggerdBranch === 'main' ||
@@ -112,9 +122,11 @@ async function pushUpdateWithNewPr(actionInfo: ActionInfo, inputs: Inputs) {
     )
   ) {
     prTitle += ` for ${actionInfo.triggerdBranch}`
+    descriotion += ` for ${actionInfo.triggerdBranch}`
   }
 
-  let descriotion = '' // TODO
+  descriotion += '\n\n'
+  descriotion += changeInfoText(vdiff)
 
   const githubManager = newGitHubManager(actionInfo.context, inputs.githubToken)
   const newPrId = await githubManager.createPullRequest(

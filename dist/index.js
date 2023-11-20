@@ -34445,6 +34445,72 @@ exports.getRunningActionInfo = getRunningActionInfo;
 
 /***/ }),
 
+/***/ 127:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.changeInfoText = void 0;
+const util_1 = __nccwpck_require__(2629);
+function changeInfoText(vdiffInfo) {
+    const needBuildStageHeader = vdiffInfo.buildStages.length > 1;
+    const text = vdiffInfo.buildStages
+        .map((bs, index) => changeInfoBuildStage(bs, index, needBuildStageHeader))
+        .join('\n\n\n');
+    return text;
+}
+exports.changeInfoText = changeInfoText;
+function changeInfoBuildStage(buildStage, index, setHeader) {
+    const elements = [];
+    if (setHeader) {
+        let header = `## Build Stage ${index + 1}`;
+        if (buildStage.stageName !== '') {
+            header += ` (${buildStage.stageName})`;
+        }
+        elements.push(header);
+    }
+    const baseImageText = changeInfoBaseImage(buildStage.baseImage);
+    elements.push(baseImageText);
+    const packagesText = changeInfoPackages(buildStage.packages);
+    elements.push(packagesText);
+    return elements.join('\n\n');
+}
+function changeInfoBaseImage(baseImage) {
+    if (baseImage.moldfile1 === baseImage.moldfile2) {
+        return 'No base image update';
+    }
+    const elements = [];
+    const header = 'Base image update';
+    elements.push(header);
+    const trimLongSha = (s) => s.startsWith('@sha') ? `${s.substring(0, 20)}...` : s;
+    const before = trimLongSha(baseImage.moldfile1);
+    const after = trimLongSha(baseImage.moldfile2);
+    const table = (0, util_1.toMarkdownTable)(['Image', 'Update'], [[baseImage.name, `${before} to ${after}`]]);
+    elements.push(table);
+    return elements.join('\n');
+}
+function changeInfoPackages(packages) {
+    const elements = [];
+    const header = 'Package Updates';
+    elements.push(header);
+    const updatedPackages = packages.filter(p => p.moldfile1 !== p.moldfile2);
+    if (updatedPackages.length === 0) {
+        return 'No package update';
+    }
+    const top = ['Package', 'PackageManager', 'Update'];
+    const packageTableElements = updatedPackages.map(p => {
+        const baseVersion = p.moldfile1 !== '' ? p.moldfile1 : '-';
+        return [p.name, p.packageManager, `${baseVersion} to ${p.moldfile2}`];
+    });
+    const table = (0, util_1.toMarkdownTable)(top, packageTableElements);
+    elements.push(table);
+    return elements.join('\n');
+}
+
+
+/***/ }),
+
 /***/ 9833:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -34821,6 +34887,7 @@ const fs = __importStar(__nccwpck_require__(7147));
 const git_1 = __nccwpck_require__(6350);
 const actions_1 = __nccwpck_require__(7014);
 const github_1 = __nccwpck_require__(978);
+const changeInfo_1 = __nccwpck_require__(127);
 async function run(inputs) {
     try {
         const actionInfo = (0, actions_1.getRunningActionInfo)();
@@ -34845,11 +34912,13 @@ async function run(inputs) {
         if (!moldfileExist) {
             vdiffBaseFilePath = path.join(inputs.workingDirectory, inputs.dockerfile);
         }
-        core.group('Get vdiff', () => (0, forge_1.getVdiff)(vdiffBaseFilePath, tmpMoldfile));
+        core.startGroup('Get vdiff');
+        const vdiffInfo = await (0, forge_1.getVdiff)(vdiffBaseFilePath, tmpMoldfile);
+        core.endGroup();
         await replaceWithUpdatedMoldfile(moldfilePath, tmpMoldfile);
         switch (inputs.updateStyle) {
             case 'new-pr':
-                core.group('Push updated Moldfile with a new pull requesl', () => pushUpdateWithNewPr(actionInfo, inputs));
+                core.group('Push updated Moldfile with a new pull requesl', () => pushUpdateWithNewPr(actionInfo, inputs, vdiffInfo));
                 break;
             case 'direct-commit':
                 core.group('Push update Moldfile to the same branch', () => pushUpdateAsDirectCommit(actionInfo, inputs));
@@ -34866,7 +34935,7 @@ exports.run = run;
 async function replaceWithUpdatedMoldfile(path, tmpMoldfile) {
     await io.cp(tmpMoldfile, path);
 }
-async function pushUpdateWithNewPr(actionInfo, inputs) {
+async function pushUpdateWithNewPr(actionInfo, inputs, vdiff) {
     const newBranchName = (0, git_1.getNewBranchName)();
     const gitManager = (0, git_1.newGitManager)();
     await gitManager.setup();
@@ -34874,14 +34943,18 @@ async function pushUpdateWithNewPr(actionInfo, inputs) {
     await gitManager.commitChange(`Update ${inputs.moldfile} with forge-action`);
     await gitManager.pushBranch(newBranchName);
     let prTitle = `Update ${inputs.moldfile} with forge-action`;
+    let descriotion = `New ${inputs.moldfile} generated based on ${inputs.dockerfile}`;
     if (actionInfo.pullRequestId) {
-        prTitle += ` for #{actionInfo.pullRequestId}`;
+        prTitle += ` for #${actionInfo.pullRequestId}`;
+        descriotion += ` for #${actionInfo.pullRequestId}`;
     }
     else if (!(actionInfo.triggerdBranch === 'main' ||
         actionInfo.triggerdBranch === ' master')) {
         prTitle += ` for ${actionInfo.triggerdBranch}`;
+        descriotion += ` for ${actionInfo.triggerdBranch}`;
     }
-    let descriotion = ''; // TODO
+    descriotion += '\n\n';
+    descriotion += (0, changeInfo_1.changeInfoText)(vdiff);
     const githubManager = (0, github_1.newGitHubManager)(actionInfo.context, inputs.githubToken);
     const newPrId = await githubManager.createPullRequest(actionInfo.triggerdBranch, newBranchName, prTitle, descriotion);
     // TODO
@@ -34926,7 +34999,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.isLocalDebug = exports.currentUnixTimestamp = exports.isFileUpToDate = exports.isFileExist = exports.createTempDirectory = void 0;
+exports.toMarkdownTable = exports.isLocalDebug = exports.currentUnixTimestamp = exports.isFileUpToDate = exports.isFileExist = exports.createTempDirectory = void 0;
 const path = __importStar(__nccwpck_require__(1017));
 const io = __importStar(__nccwpck_require__(7436));
 const fs = __importStar(__nccwpck_require__(7147));
@@ -34971,6 +35044,21 @@ function isLocalDebug() {
     return process.env.LOCAL_DEBUG === 'true';
 }
 exports.isLocalDebug = isLocalDebug;
+function toMarkdownTable(top, rows) {
+    const columnLength = top.length;
+    const elements = [];
+    const topText = toMarkdownTableRow(top);
+    elements.push(topText);
+    const separator = toMarkdownTableRow(Array(columnLength).fill('---'));
+    elements.push(separator);
+    const rowTexts = rows.map(row => toMarkdownTableRow(row));
+    elements.push.apply(elements, rowTexts);
+    return elements.join('\n');
+}
+exports.toMarkdownTable = toMarkdownTable;
+function toMarkdownTableRow(list) {
+    return `| ${list.join(' | ')} |`;
+}
 
 
 /***/ }),
