@@ -16,7 +16,7 @@ inputs:
   moldfile:
     description: 'The target Moldfile to update'
     required: true
-  update-stye:
+  update-style:
     description: |
       The way to update a Moldfile. Default "new-pr".
       new-pr: Create a new pull request with an updated Moldfile. If the event is "pull_request", the action add a comment to the original pull request to notify the new pull request created.
