@@ -155,6 +155,9 @@ async function pushUpdateWithNewPr(
       `Merge #${newPrId} to this branch to update ${inputs.moldfile}`
     )
   }
+
+  // Always throw error to aware the need to update the Moldfile with merging the new PR forcely
+  throw new Error(`${inputs.moldfile} isn't up-to-date. Merge #${newPrId}`)
 }
 
 async function pushUpdateAsDirectCommit(
