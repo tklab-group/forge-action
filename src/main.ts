@@ -157,7 +157,7 @@ async function pushUpdateWithNewPr(
   }
 
   // Always throw error to aware the need to update the Moldfile with merging the new PR forcely
-  core.setFailed(`${inputs.moldfile} isn't up-to-date. Merge #${newPrId}`)
+  throw new Error(`${inputs.moldfile} isn't up-to-date. Merge #${newPrId}`)
 }
 
 async function pushUpdateAsDirectCommit(
