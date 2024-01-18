@@ -127,6 +127,11 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
+## Development
+
+このGitHub Actionsが参照されるときにはビルド成果物の方が実行される
+タグを付けてpushする場合は、`npm run build`を実行してビルド成果物を更新してからpushすること
+
 ## Debug
 
 ローカルで動作テストをするときの実行コマンド
