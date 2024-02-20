@@ -136,5 +136,5 @@ jobs:
 
 ローカルで動作テストをするときの実行コマンド
 ```bash
-npm run build && act -s GITHUB_TOKEN="$(gh auth token)" --env LOCAL_DEBUG=true
+npm run build && act -s GITHUB_TOKEN="$(gh auth token)" --env LOCAL_DEBUG=true -j 'debug'
 ```
