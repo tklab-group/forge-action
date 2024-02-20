@@ -1,5 +1,8 @@
 # forge-action
 
+![GitHub Tag](https://img.shields.io/github/v/tag/tklab-group/forge-action)
+![GitHub License](https://img.shields.io/github/license/tklab-group/forge-action)
+
 A GitHub Action to update Moldfile with [forge](https://github.com/tklab-group/forge).
 
 ![](./assets/demo.png)
