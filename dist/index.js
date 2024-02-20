@@ -34556,7 +34556,7 @@ const fs = __importStar(__nccwpck_require__(7147));
 const util_1 = __nccwpck_require__(2629);
 const path = __importStar(__nccwpck_require__(1017));
 const semver = __importStar(__nccwpck_require__(1383));
-const requiredForgeVersion = '>=v0.0.5';
+const requiredForgeVersion = '>=v1.0.0';
 async function installForge(version) {
     try {
         const goExecPath = await io.which('go', true);
@@ -34567,17 +34567,10 @@ async function installForge(version) {
             console.log(error.message);
         throw new Error('Setup Go environment before using this action');
     }
-    // TODO: Remove and improve after the repository becoming public
-    await installPrivateForge(version);
+    await exec.exec('go', ['install', `github.com/tklab-group/forge@${version}`]);
     await validateInstalledVersion();
 }
 exports.installForge = installForge;
-const forgeInstallToken = core.getInput('forge-install-token');
-async function installPrivateForge(version) {
-    await exec.exec(`git config --global url."https://${forgeInstallToken}:x-oauth-basic@github.com/".insteadOf "https://github.com/"`);
-    await exec.exec('go', ['env', '-w', 'GOPRIVATE=github.com/tklab-group']);
-    await exec.exec('go', ['install', `github.com/tklab-group/forge@${version}`]);
-}
 async function validateInstalledVersion() {
     const versionOutput = await exec.getExecOutput('forge', ['--version']);
     const match = versionOutput.stdout.match(/forge version (.+)/);
