@@ -1,6 +1,8 @@
 # forge-action
 
-A GitHub action to update Moldfile with [forge](https://taskfile.dev/).
+A GitHub Action to update Moldfile with [forge](https://taskfile.dev/).
+
+![](./assets/demo.png)
 
 ## Usage
 
@@ -8,13 +10,113 @@ A GitHub action to update Moldfile with [forge](https://taskfile.dev/).
     runs-on: ubuntu-latest
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v4
-      - uses: tklab-group/forge-action@latest
+      - uses: tklab-group/forge-action@v1
         with:
           build-context: '.'
           dockerfile: 'Dockerfile'
           moldfile: 'Dockerfile.mold'
           github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
+
+## Example
+
+### Create a new PR for updating Moldfile
+
+When you create a PR with editing Dockerfile, forge-action generates a new PR for updating Moldfile and notify it.
+
+|              Base PR              |      Generated PR by forge-action      |
+| :-------------------------------: | :------------------------------------: |
+| ![](./assets/example/main-pr.png) | ![](./assets/example/generated-pr.png) |
+
+It's recommended to set a branch protection rule to block merging the base PR without updated Moldfile.
+
+![](./assets/example/block-merge.png)
+
+<details>
+<summary>Recipe</summary>
+
+```yaml
+on:
+  pull_request:
+    paths:
+      - Dockerfile
+
+jobs:
+  forge-action-job:
+    runs-on: ubuntu-latest
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
+      - uses: tklab-group/forge-action@v1
+        with:
+          build-context: '.'
+          dockerfile: 'Dockerfile'
+          moldfile: 'Dockerfile.mold'
+          update-style: 'new-pr'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+```
+
+Set [a branch protection rule](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/managing-a-branch-protection-rule) with the job.
+
+![](./assets/example/branch-protection-rule.png)
+
+</details>
+
+
+### Update Moldfile immediately when the base Dockerfile changed
+
+After pushing a change of the base Dockerfile, the action pushes a commit to update Moldfile to the branch.
+
+<details>
+<summary>Recipe</summary>
+
+```yaml
+on:
+  push:
+    - Dockerfile
+
+jobs:
+  forge-action-job:
+    runs-on: ubuntu-latest
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
+      - uses: tklab-group/forge-action@v1
+        with:
+          build-context: '.'
+          dockerfile: 'Dockerfile'
+          moldfile: 'Dockerfile.mold'
+          update-style: 'direct-commit'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+```
+</details>
+
+
+### Scheduled Moldfile update
+
+Like dependabot, the action creates a pull request to update Moldfile based on a schedule.
+
+<details>
+<summary>Recipe</summary>
+
+```yaml
+on:
+  schedule:
+    - cron: '0 0 0 0 1' # Every Monday
+
+jobs:
+  example:
+    forge-action-job: ubuntu-latest
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
+      - uses: tklab-group/forge-action@v1
+        with:
+          build-context: '.'
+          dockerfile: 'Dockerfile'
+          moldfile: 'Dockerfile.mold'
+          update-style: 'new-pr'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+```
+</details>
+
 
 ## Action inputs
 
@@ -79,62 +181,3 @@ Set `GITHUB_TOKEN` or Personal Access Token (PAT).
 
 e.g. `${{ secrets.GITHUB_TOKEN }}`
 
-## Example
-
-### Update Moldfile when the base Dockerfile changed
-
-After pushing a change of the base Dockerfile, the action pushes a commit to update Moldfile to the branch.
-
-```yaml
-on:
-  push:
-    - Dockerfile
-
-jobs:
-  example:
-    runs-on: ubuntu-latest
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v4
-      - uses: tklab-group/forge-action@latest
-        with:
-          build-context: '.'
-          dockerfile: 'Dockerfile'
-          moldfile: 'Dockerfile.mold'
-          update-style: 'direct-commit'
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-```
-
-### Scheduled Moldfile update
-
-Like dependabot, the action creates a pull request to update Moldfile based on a schedule.
-
-```yaml
-on:
-  schedule:
-    - cron: '0 0 0 0 1' # Every Monday
-
-jobs:
-  example:
-    runs-on: ubuntu-latest
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v4
-      - uses: tklab-group/forge-action@latest
-        with:
-          build-context: '.'
-          dockerfile: 'Dockerfile'
-          moldfile: 'Dockerfile.mold'
-          update-style: 'new-pr'
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-```
-
-## Development
-
-このGitHub Actionsが参照されるときにはビルド成果物の方が実行される
-タグを付けてpushする場合は、`npm run build`を実行してビルド成果物を更新してからpushすること
-
-## Debug
-
-ローカルで動作テストをするときの実行コマンド
-```bash
-npm run build && act -s GITHUB_TOKEN="$(gh auth token)" --env LOCAL_DEBUG=true -j 'debug'
-```
