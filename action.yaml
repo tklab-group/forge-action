@@ -25,8 +25,7 @@ inputs:
     default: 'new-pr'
   github-token:
     description: 'Need permission to write the repository'
-  forge-install-token:
-    description: 'Required while forge repository is private'
+
 runs:
   using: 'node20'
   main: 'dist/index.js'

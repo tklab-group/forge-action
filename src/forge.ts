@@ -7,7 +7,7 @@ import { createTempDirectory } from './util'
 import * as path from 'path'
 import * as semver from 'semver'
 
-const requiredForgeVersion = '>=v0.0.5'
+const requiredForgeVersion = '>=v1.0.0'
 
 export async function installForge(version: string) {
   try {
@@ -18,20 +18,9 @@ export async function installForge(version: string) {
     throw new Error('Setup Go environment before using this action')
   }
 
-  // TODO: Remove and improve after the repository becoming public
-  await installPrivateForge(version)
+  await exec.exec('go', ['install', `github.com/tklab-group/forge@${version}`])
 
   await validateInstalledVersion()
-}
-
-const forgeInstallToken = core.getInput('forge-install-token')
-async function installPrivateForge(version: string) {
-  await exec.exec(
-    `git config --global url."https://${forgeInstallToken}:x-oauth-basic@github.com/".insteadOf "https://github.com/"`
-  )
-  await exec.exec('go', ['env', '-w', 'GOPRIVATE=github.com/tklab-group'])
-
-  await exec.exec('go', ['install', `github.com/tklab-group/forge@${version}`])
 }
 
 async function validateInstalledVersion() {
