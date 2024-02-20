@@ -1,6 +1,6 @@
 # forge-action
 
-A GitHub Action to update Moldfile with [forge](https://taskfile.dev/).
+A GitHub Action to update Moldfile with [forge](https://github.com/tklab-group/forge).
 
 ![](./assets/demo.png)
 
@@ -62,9 +62,11 @@ Set [a branch protection rule](https://docs.github.com/en/repositories/configuri
 </details>
 
 
-### Update Moldfile immediately when the base Dockerfile changed
+### Update Moldfile when pushing modified Dockerfile
 
-After pushing a change of the base Dockerfile, the action pushes a commit to update Moldfile to the branch.
+When you edit Dockerfile and push a working branch, forge-action directly commits the update for Moldfile on the branch.
+
+![](./assets/example/direct-commit.png)
 
 <details>
 <summary>Recipe</summary>
@@ -92,7 +94,7 @@ jobs:
 
 ### Scheduled Moldfile update
 
-Like dependabot, the action creates a pull request to update Moldfile based on a schedule.
+Like dependabot, forge-action creates a PR to update Moldfile based on a schedule.
 
 <details>
 <summary>Recipe</summary>
