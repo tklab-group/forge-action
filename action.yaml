@@ -29,3 +29,7 @@ inputs:
 runs:
   using: 'node20'
   main: 'dist/index.js'
+
+branding:
+  icon: "anchor"
+  color: "orange"
