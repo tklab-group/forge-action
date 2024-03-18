@@ -13,7 +13,7 @@ A GitHub Action to update Moldfile with [forge](https://github.com/tklab-group/f
     runs-on: ubuntu-latest
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v4
-      - uses: tklab-group/forge-action@v1.0.0
+      - uses: tklab-group/forge-action@v1.1.0
         with:
           build-context: '.'
           dockerfile: 'Dockerfile'
@@ -49,7 +49,7 @@ jobs:
     runs-on: ubuntu-latest
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v4
-      - uses: tklab-group/forge-action@v1.0.0
+      - uses: tklab-group/forge-action@v1.1.0
         with:
           build-context: '.'
           dockerfile: 'Dockerfile'
@@ -84,7 +84,7 @@ jobs:
     runs-on: ubuntu-latest
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v4
-      - uses: tklab-group/forge-action@v1.0.0
+      - uses: tklab-group/forge-action@v1.1.0
         with:
           build-context: '.'
           dockerfile: 'Dockerfile'
@@ -112,7 +112,7 @@ jobs:
     forge-action-job: ubuntu-latest
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v4
-      - uses: tklab-group/forge-action@v1.0.0
+      - uses: tklab-group/forge-action@v1.1.0
         with:
           build-context: '.'
           dockerfile: 'Dockerfile'

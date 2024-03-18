@@ -23,3 +23,5 @@ GitHub Actionsとしての使用時に参照されるのは`dist/`以下のフ�
 
 1. gitタグを`v0.0.0`形式(e.g. `v1.2.3`)で作成してpush
 2. [New release · tklab-group/forge-action](https://github.com/tklab-group/forge-action/releases/new)から作成したgitタグを選択し、新規リリースを作成する
+
+`README.md`の使用例にバージョン指定の記述があるので、それも最新のリリースバージョンに更新する。
