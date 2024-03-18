@@ -7,7 +7,7 @@ import { createTempDirectory } from './util'
 import * as path from 'path'
 import * as semver from 'semver'
 
-const requiredForgeVersion = '>=v1.0.0'
+const requiredForgeVersion = '>=v1.1.0'
 
 export async function installForge(version: string) {
   try {
